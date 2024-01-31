@@ -10,7 +10,8 @@ resource "google_container_cluster" "primary" {
   initial_node_count = 2
 
   node_config {
-    machine_type = "n1-standard-2"  # You can choose a different machine type if needed
+    machine_type = "e2-micro" 
+    disk_size_gb = 40
   }
 }
 
@@ -21,7 +22,8 @@ resource "google_container_node_pool" "webapp" {
   node_count = 1
 
   node_config {
-    machine_type = "n1-standard-2"
+    machine_type = "e2-micro"
+    disk_size_gb = 40
     labels = {
       "app" = "**webapp**"
     }
@@ -51,9 +53,9 @@ resource "kubernetes_deployment" "webapp" {
 
       spec {
         container {
-          image = "**<your-webapp-container-image>**"
+          image = "nginx:stable"
           name  = "**webapp**"
-        }
+        
       }
     }
   }
