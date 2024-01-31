@@ -21,26 +21,83 @@ This Terraform project deploys a Kubernetes cluster with a web application on GC
 Look for lines in the Terraform code containing placeholder values enclosed in double asterisks (`**`). Replace these values with your actual configuration.
 
 ```hcl
-provider "aws" {
-  region = "**<desired-region>**"
+provider "google" {
+  credentials = file("**<path-to-your-service-account-key.json>**")
+  project     = "**<your-project-id>**"
+  region      = "**<desired-region>**"
 }
 
-resource "module" "eks" {
-  source          = "terraform-aws-modules/eks/aws"
-  cluster_name    = "**my-eks-cluster**"
-  subnets         = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
-  vpc_id          = "**vpc-xxxxxxxxxxxxxxxxx**"
-  cluster_version = "**1.21**"
+resource "google_container_cluster" "primary" {
+  name     = "**my-gke-cluster**"
+  location = "**<desired-region>**"
+  initial_node_count = **2**
 
-  node_groups = {
-    eks_nodes = {
-      desired_capacity = **2**
-      max_capacity     = **3**
-      min_capacity     = **1**
+  node_config {
+    machine_type = "**n1-standard-2**"
+  }
+}
 
-      instance_type = "**t2.small**"
-      key_name      = "**your-key-pair-name**"
+resource "google_container_node_pool" "webapp" {
+  name       = "**webapp-pool**"
+  cluster    = google_container_cluster.primary.name
+  location   = google_container_cluster.primary.location
+  node_count = **1**
+
+  node_config {
+    machine_type = "**n1-standard-2**"
+    labels = {
+      "app" = "**webapp**"
     }
   }
 }
 
+resource "kubernetes_deployment" "webapp" {
+  metadata {
+    name = "**webapp**"
+  }
+
+  spec {
+    replicas = **1**
+
+    selector {
+      match_labels = {
+        app = "**webapp**"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "**webapp**"
+        }
+      }
+
+      spec {
+        container {
+          image = "**<your-webapp-container-image>**"
+          name  = "**webapp**"
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "webapp" {
+  metadata {
+    name = "**webapp**"
+  }
+
+  spec {
+    selector = {
+      app = "**webapp**"
+    }
+
+    port {
+      protocol = "TCP"
+      port     = **80**
+      target_port = **80**
+    }
+
+    type = "LoadBalancer"
+  }
+}
