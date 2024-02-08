@@ -1,9 +1,7 @@
-# demo-4-duplo
-TF artifacts for demo build
-
-# Terraform GCP/GKE Kubernetes Cluster with Web Application
+## Terraform GCP/GKE Kubernetes Cluster with Web Application
 
 This Terraform project deploys a Kubernetes cluster with a web application on GCP with GKE.
+*** NOTE: Load balancer need configuration post GKE cluster build
 
 ## GCP/GKE Configuration (main.tf)
 
